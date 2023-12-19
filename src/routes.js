@@ -1,4 +1,4 @@
-const UseController = require('./controller/UseController');
+const UseController = require('./controller/UserController');
 
 module.exports = [
   {
@@ -7,9 +7,24 @@ module.exports = [
     hendler: UseController.listUsers
   },
   {
-    endpoint: '/products',
+    endpoint: '/users/:id',
     method: 'GET',
-    hendler: UseController.listProducts
+    hendler: UseController.getUserById
+  },
+  {
+    endpoint: '/users',
+    method: 'POST',
+    hendler: UseController.createUser
+  },
+  {
+    endpoint: '/users/:id',
+    method: 'PUT',
+    hendler: UseController.updateUser
+  },
+  {
+    endpoint: '/users/:id',
+    method: 'DELETE',
+    hendler: UseController.deleteUser
   },
 
 ];

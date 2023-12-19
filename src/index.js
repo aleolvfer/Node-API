@@ -1,21 +1,44 @@
 const http = require('http');
-const url = require('url');
+const { URL } = require('url');
 
+const bodyParser = require('./helpers/bodyParser');
 const routes = require('./routes');
 
 const server = http.createServer((request, response) => {
-  const parsedUrl = url.parse(request.url, true);
+  
+  const parsedUrl = new URL(`http://localhos:3000${request.url}`);
+  //console.log(parsedUrl, '<<<<');
+  //console.log(`Request method: ${request.method} | Endpoint: ${parsedUrl.pathname}`);
 
-  console.log(`Request method: ${request.method} | Endpoint: ${parsedUrl.pathname}`);
+  let { pathname } = parsedUrl;
+  let id = null;
+  
+  const splitEndPoit = pathname.split('/').filter(Boolean);
 
+  if (splitEndPoit.length > 1) {
+    pathname = `/${splitEndPoit[0]}/:id`;
+    id = splitEndPoit[1];
+  }
+  
   const route = routes.find((routeObj) => (
-    routeObj.endpoint === parsedUrl.pathname && routeObj.method === request.method
+    routeObj.endpoint === pathname && routeObj.method === request.method
   ));
 
   if (route) {
-    console.log(parsedUrl, 'asdadasd')
-    request.query = parsedUrl.query;
-    route.hendler(request, response);
+    request.query = Object.fromEntries(parsedUrl.searchParams);
+    request.params = { id };
+
+    response.send = (statusCode, body) => {
+      response.writeHead(statusCode, { 'Content-type': 'application/json' });
+      response.end(JSON.stringify(body));
+    };
+
+    if(['POST', 'PUT', 'PATCH'].includes(request.method)){
+      bodyParser(request, () => route.hendler(request, response));
+    } else {
+      route.hendler(request, response);
+    }
+
   } else {
     response.writeHead(404, { 'Content-type': 'text/html' });
     response.end(`Cannot ${request.method} ${parsedUrl.pathname}`);
